@@ -18,6 +18,8 @@ func (e *UnwrapError) Error() string {
 func Unwrap(tree interface{}, q string) (interface{}, error) {
 	s := new(scanner.Scanner)
 	s.Init(strings.NewReader(q))
+	s.Mode &= ^uint(scanner.ScanFloats)
+	s.Mode |= scanner.ScanInts
 	t := s.Scan()
 	for t != scanner.EOF {
 		switch t {
@@ -41,20 +43,53 @@ func Unwrap(tree interface{}, q string) (interface{}, error) {
 			tree = m[s.TokenText()]
 		case '[':
 			t = s.Scan()
-			i, _ := strconv.Atoi(s.TokenText())
-			t = s.Scan()
-			if t != ']' {
+			switch t {
+			case scanner.Int:
+				i, _ := strconv.Atoi(s.TokenText())
+				a := tree.([]interface{})
+				tree = a[i]
+				_, err := expect(s, ']')
+				if err != nil {
+					return nil, err
+				}
+			case ':':
+				a := tree.([]interface{})
+				b := make([]interface{}, len(a))
+				_, err := expect(s, ']')
+				if err != nil {
+					return nil, err
+				}
+				for i, v := range a {
+					res, err := Unwrap(v, q[s.Offset:])
+					if err != nil {
+						return nil, err
+					}
+					b[i] = res
+				}
+				return b, nil
+			default:
 				return nil, &UnwrapError{
 					fmt.Sprintf(
-						"unwrap: Parse error: expected ']', got %v",
+						"unwrap: Parse error: expected int or ':', got %v",
 						scanner.TokenString(t),
 					),
 				}
 			}
-			a := tree.([]interface{})
-			tree = a[i]
 		}
 		t = s.Scan()
 	}
 	return tree, nil
+}
+
+func expect(s *scanner.Scanner, tok rune) (t rune, err error) {
+	t = s.Scan()
+	if t != ']' {
+		return -1, &UnwrapError{
+			fmt.Sprintf(
+				"unwrap: Parse error: expected ']', got %v",
+				scanner.TokenString(t),
+			),
+		}
+	}
+	return
 }

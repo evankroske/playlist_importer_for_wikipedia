@@ -35,7 +35,7 @@ func TestUnwrapMapParseError(t *testing.T) {
 	}
 }
 
-func TestUnwrapArrayTypeError(t *testing.T) {
+func TestUnwrapArrayIndex(t *testing.T) {
 	var array interface{} = []interface{}{ []interface{}{ 1 } }
 	res, err := Unwrap(array, "[0][0]")
 	if err != nil {
@@ -45,5 +45,21 @@ func TestUnwrapArrayTypeError(t *testing.T) {
 		t.Fatal("Wrong result type")
 	} else if v != 1 {
 		t.Fatal("Wrong result value")
+	}
+}
+
+func TestUnwrapArraySlice(t *testing.T) {
+	var array interface{} = []interface{}{
+		[]interface{}{ 1 },
+		[]interface{}{ 2 },
+	}
+	res, err := Unwrap(array, "[:][0]")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if v, ok := res.([]interface{}); !ok {
+		t.Fatalf("Wrong result type: %v", v)
+	} else if v[0] != 1 || v[1] != 2 {
+		t.Fatal("Wrong result type")
 	}
 }
