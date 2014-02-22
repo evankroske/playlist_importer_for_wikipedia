@@ -1,0 +1,4 @@
+cron:
+- description: kickoff new genre discovery
+  url: /kickoffgenrediscovery
+  schedule: every 5 minutes

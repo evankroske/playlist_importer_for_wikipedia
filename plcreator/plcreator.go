@@ -7,6 +7,8 @@ import (
 
 	"appengine"
 	"appengine/urlfetch"
+
+	"plcreator/unwrap"
 )
 
 func init() {
@@ -29,5 +31,15 @@ func refreshGenreListHandler(w http.ResponseWriter, r *http.Request) {
 	dec := json.NewDecoder(resp.Body)
 	var v interface{}
 	dec.Decode(&v)
-	w.Write([]byte("Writing parser"))
+	untypedTitles, err := unwrap.Unwrap(v, ".query.categorymembers[:].title")
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+	titles, ok := untypedTitles.([]interface{})
+    if !ok {
+        http.Error(w, "Guessed the wrong type", http.StatusInternalServerError)
+        return
+    }
+	w.Write([]byte(fmt.Sprintf("%v", titles)))
 }
