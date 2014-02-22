@@ -18,7 +18,6 @@ package playlistimporter
 import (
 	"encoding/json"
     "fmt"
-	"html/template"
 	"io"
     "net/http"
 
@@ -28,8 +27,6 @@ import (
 	"playlistimporter/unwrap"
 )
 
-var loginPageTemplate *template.Template
-
 func init() {
     http.HandleFunc("/", handler)
     http.HandleFunc("/admin/discoverplaylists", refreshGenreListHandler)
@@ -38,6 +35,7 @@ func init() {
 		kickoffGenreDiscoveryHandler,
 	)
 	http.HandleFunc("/admin/login", loginHandler)
+	http.HandleFunc("/admin/logout", logoutHandler)
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
