@@ -1,4 +1,4 @@
-package plcreator
+package playlistimporter
 
 import (
 	"encoding/json"
@@ -9,7 +9,7 @@ import (
 	"appengine"
 	"appengine/urlfetch"
 
-	"plcreator/unwrap"
+	"playlistimporter/unwrap"
 )
 
 func init() {
