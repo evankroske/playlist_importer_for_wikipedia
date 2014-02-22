@@ -3,6 +3,7 @@ package plcreator
 import (
 	"encoding/json"
     "fmt"
+	"io"
     "net/http"
 
 	"appengine"
@@ -14,10 +15,15 @@ import (
 func init() {
     http.HandleFunc("/", handler)
     http.HandleFunc("/refreshgenrelist", refreshGenreListHandler)
+	http.HandleFunc("/kickoffgenrediscovery", kickoffGenreDiscoveryHandler)
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
-    fmt.Fprint(w, "Hello, world!")
+	if r.URL.Path == "/" {
+		fmt.Fprint(w, r.URL.Path)
+	} else {
+		http.NotFound(w, r)
+	}
 }
 
 func refreshGenreListHandler(w http.ResponseWriter, r *http.Request) {
@@ -42,4 +48,8 @@ func refreshGenreListHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
 	w.Write([]byte(fmt.Sprintf("%v", titles)))
+}
+
+func kickoffGenreDiscoveryHandler(w http.ResponseWriter, r *http.Request) {
+	io.WriteString(w, "Get ready!")
 }
