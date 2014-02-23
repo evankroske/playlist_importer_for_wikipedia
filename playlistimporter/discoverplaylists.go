@@ -20,7 +20,6 @@ import (
     "fmt"
     "net/http"
 	"net/url"
-	"strings"
 
 	"appengine"
 	"appengine/urlfetch"
@@ -28,12 +27,12 @@ import (
 	"playlistimporter/unwrap"
 )
 
-const titlesFormKey = "childTitles"
+const categoryTitleFormKey = "cmtitle"
 const categoryMembersLimit = "500"
 func refreshGenreListHandler(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	r.ParseForm()
-	parentTitles := r.Form[titlesFormKey]
+	parentTitles := r.Form[categoryTitleFormKey]
 	// "s" for "slice"
 	s := func(v string) []string {
 		return []string{v}
@@ -43,7 +42,7 @@ func refreshGenreListHandler(w http.ResponseWriter, r *http.Request) {
 		"list": s("categorymembers"),
 		"format": s("json"),
 		"cmlimit": s(categoryMembersLimit),
-		"cmtitle": s(strings.Join(parentTitles, "|")),
+		"cmtitle": parentTitles,
 	}
 	reqUrl := &url.URL{
 		Scheme: "http",
