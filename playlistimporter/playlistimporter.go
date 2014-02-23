@@ -18,7 +18,6 @@ package playlistimporter
 import (
 	"encoding/json"
     "fmt"
-	"io"
     "net/http"
 
 	"appengine"
@@ -89,6 +88,3 @@ func refreshGenreListHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(fmt.Sprintf("%#v", titles)))
 }
 
-func kickoffGenreDiscoveryHandler(w http.ResponseWriter, r *http.Request) {
-	io.WriteString(w, "Get ready!")
-}
