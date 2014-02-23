@@ -77,15 +77,16 @@ func refreshGenreListHandler(w http.ResponseWriter, r *http.Request) {
 	untypedTitles, err := unwrap.Unwrap(v, ".query.categorymembers[:].title")
     if err != nil {
 		c.Errorf("%v: %v", err.Error(), resp.Body)
-        http.Error(w, err.Error(), http.StatusInternalServerError)
+        http.Error(w, "My bad.", http.StatusInternalServerError)
         return
     }
 	titles, ok := untypedTitles.([]interface{})
     if !ok {
-        http.Error(w, "Guessed the wrong type", http.StatusInternalServerError)
+		c.Errorf("%v: %v", "Got wrong type from unwrap", resp.Body)
+        http.Error(w, "Sorry.", http.StatusInternalServerError)
         return
     }
-	w.Write([]byte(fmt.Sprintf("%v", titles)))
+	w.Write([]byte(fmt.Sprintf("%#v", titles)))
 }
 
 func kickoffGenreDiscoveryHandler(w http.ResponseWriter, r *http.Request) {
