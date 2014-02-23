@@ -19,6 +19,8 @@ import (
 	"encoding/json"
     "fmt"
     "net/http"
+	"net/url"
+	"strings"
 
 	"appengine"
 	"appengine/urlfetch"
@@ -26,12 +28,32 @@ import (
 	"playlistimporter/unwrap"
 )
 
+const titlesFormKey = "childTitles"
+const categoryMembersLimit = "500"
 func refreshGenreListHandler(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
-	client := urlfetch.Client(c)
+	r.ParseForm()
+	parentTitles := r.Form[titlesFormKey]
+	// "s" for "slice"
+	s := func(v string) []string {
+		return []string{v}
+	}
+	reqData := url.Values{
+		"action": s("query"),
+		"list": s("categorymembers"),
+		"format": s("json"),
+		"cmlimit": s(categoryMembersLimit),
+		"cmtitle": s(strings.Join(parentTitles, "|")),
+	}
+	reqUrl := &url.URL{
+		Scheme: "http",
+		Host: "en.wikipedia.org",
+		Path: "/w/api.php",
+		RawQuery: reqData.Encode(),
+	}
 	req, err := http.NewRequest(
 		"GET",
-		"http://en.wikipedia.org/w/api.php?action=query&list=categorymembers&format=json&cmtitle=Category%3AMusic_genres&cmlimit=100",
+		reqUrl.String(),
 		nil,
 	)
 	if err != nil {
@@ -46,6 +68,7 @@ func refreshGenreListHandler(w http.ResponseWriter, r *http.Request) {
 		 "http://playlistimporterforwikipedia.appspot.com",
 	)
 	req.Header.Add("User-Agent", userAgent)
+	client := urlfetch.Client(c)
 	resp, err := client.Do(req)
 	defer resp.Body.Close()
 	if err != nil {
@@ -61,11 +84,11 @@ func refreshGenreListHandler(w http.ResponseWriter, r *http.Request) {
         http.Error(w, "My bad.", http.StatusInternalServerError)
         return
     }
-	titles, ok := untypedTitles.([]interface{})
+	childTitles, ok := untypedTitles.([]interface{})
     if !ok {
 		c.Errorf("%v: %v", "Got wrong type from unwrap", resp.Body)
         http.Error(w, "Sorry.", http.StatusInternalServerError)
         return
     }
-	w.Write([]byte(fmt.Sprintf("%#v", titles)))
+	w.Write([]byte(fmt.Sprintf("%#v", childTitles)))
 }

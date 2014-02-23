@@ -28,7 +28,7 @@ func kickoffGenreDiscoveryHandler(w http.ResponseWriter, r *http.Request) {
 	t := taskqueue.NewPOSTTask(
 		discoverPlaylistsPath,
 		map[string][]string{
-			"url": []string{"Category:Music_Genres"},
+			titlesFormKey: []string{"Category:Music_Genres"},
 		},
 	)
 	if _, err := taskqueue.Add(c, t, "playlistSources"); err != nil {
