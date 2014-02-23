@@ -26,9 +26,11 @@ import (
 	"playlistimporter/unwrap"
 )
 
+const discoverPlaylistsPath = "/admin/discoverplaylists"
+
 func init() {
     http.HandleFunc("/", handler)
-    http.HandleFunc("/admin/discoverplaylists", refreshGenreListHandler)
+    http.HandleFunc(discoverPlaylistsPath, refreshGenreListHandler)
 	http.HandleFunc(
 		"/admin/startplaylistdiscovery",
 		kickoffGenreDiscoveryHandler,

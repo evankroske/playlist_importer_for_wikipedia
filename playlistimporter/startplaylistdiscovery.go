@@ -16,10 +16,29 @@ limitations under the License.
 package playlistimporter
 
 import (
-	"io"
+	"fmt"
 	"net/http"
+
+	"appengine"
+	"appengine/taskqueue"
 )
 
 func kickoffGenreDiscoveryHandler(w http.ResponseWriter, r *http.Request) {
-	io.WriteString(w, "Get ready!")
+	c := appengine.NewContext(r)
+	t := taskqueue.NewPOSTTask(
+		discoverPlaylistsPath,
+		map[string][]string{
+			"url": []string{"Category:Music_Genres"},
+		},
+	)
+	if _, err := taskqueue.Add(c, t, "playlistSources"); err != nil {
+		c.Criticalf(err.Error())
+		http.Error(
+			w,
+			"Error adding task to queue",
+			http.StatusInternalServerError,
+		)
+		return
+	}
+	fmt.Fprintln(w, "Task added successfully")
 }
