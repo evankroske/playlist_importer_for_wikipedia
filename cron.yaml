@@ -1,4 +1,4 @@
 cron:
-- description: kickoff new genre discovery
-  url: /kickoffgenrediscovery
+- description: start playlist discovery
+  url: /admin/startplaylistdiscovery
   schedule: every 5 minutes
