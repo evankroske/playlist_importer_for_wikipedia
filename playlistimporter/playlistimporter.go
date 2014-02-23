@@ -16,14 +16,8 @@ limitations under the License.
 package playlistimporter
 
 import (
-	"encoding/json"
     "fmt"
     "net/http"
-
-	"appengine"
-	"appengine/urlfetch"
-
-	"playlistimporter/unwrap"
 )
 
 const discoverPlaylistsPath = "/admin/discoverplaylists"
@@ -46,47 +40,3 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 	}
 }
-
-func refreshGenreListHandler(w http.ResponseWriter, r *http.Request) {
-	c := appengine.NewContext(r)
-	client := urlfetch.Client(c)
-	req, err := http.NewRequest(
-		"GET",
-		"http://en.wikipedia.org/w/api.php?action=query&list=categorymembers&format=json&cmtitle=Category%3AMusic_genres&cmlimit=100",
-		nil,
-	)
-	if err != nil {
-		c.Criticalf(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-	const homePage = "http://playlistimporterforwikipedia.appspot.com"
-	userAgent := fmt.Sprintf(
-		"Playlist Importer for Wikipedia/%s (%s; evan@evankroske.com)",
-		appengine.VersionID(c),
-		homePage,
-	)
-	req.Header.Add("User-Agent", userAgent)
-	resp, err := client.Do(req)
-	defer resp.Body.Close()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	dec := json.NewDecoder(resp.Body)
-	var v interface{}
-	dec.Decode(&v)
-	untypedTitles, err := unwrap.Unwrap(v, ".query.categorymembers[:].title")
-    if err != nil {
-		c.Errorf("%v: %v", err.Error(), resp.Body)
-        http.Error(w, "My bad.", http.StatusInternalServerError)
-        return
-    }
-	titles, ok := untypedTitles.([]interface{})
-    if !ok {
-		c.Errorf("%v: %v", "Got wrong type from unwrap", resp.Body)
-        http.Error(w, "Sorry.", http.StatusInternalServerError)
-        return
-    }
-	w.Write([]byte(fmt.Sprintf("%#v", titles)))
-}
-
