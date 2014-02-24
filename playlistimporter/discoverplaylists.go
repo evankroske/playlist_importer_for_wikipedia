@@ -18,8 +18,10 @@ package playlistimporter
 import (
 	"encoding/json"
     "fmt"
+	"io/ioutil"
     "net/http"
 	"net/url"
+	"strings"
 
 	"appengine"
 	"appengine/urlfetch"
@@ -33,6 +35,11 @@ func refreshGenreListHandler(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	r.ParseForm()
 	parentTitles := r.Form[categoryTitleFormKey]
+	if len(parentTitles) != 1 {
+		c.Criticalf("len(parentTitles) == %v", len(parentTitles))
+		http.Error(w, "Whoops.", http.StatusInternalServerError)
+		return
+	}
 	// "s" for "slice"
 	s := func(v string) []string {
 		return []string{v}
@@ -50,6 +57,7 @@ func refreshGenreListHandler(w http.ResponseWriter, r *http.Request) {
 		Path: "/w/api.php",
 		RawQuery: reqData.Encode(),
 	}
+	c.Debugf("Wikipedia request URL: %v", reqUrl)
 	req, err := http.NewRequest(
 		"GET",
 		reqUrl.String(),
@@ -71,15 +79,25 @@ func refreshGenreListHandler(w http.ResponseWriter, r *http.Request) {
 	resp, err := client.Do(req)
 	defer resp.Body.Close()
 	if err != nil {
+		c.Errorf("%v", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	dec := json.NewDecoder(resp.Body)
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		c.Errorf("Error reading response body: %v", err.Error())
+	}
+	if !strings.HasPrefix(resp.Status, "2") {
+		c.Errorf("Status: %v\nBody: %v", resp.Status, string(bodyBytes))
+		http.Error(w, "Uh-oh.", http.StatusInternalServerError)
+		return
+	}
+	c.Debugf("%v", string(bodyBytes))
 	var v interface{}
-	dec.Decode(&v)
+	json.Unmarshal(bodyBytes, v)
 	untypedTitles, err := unwrap.Unwrap(v, ".query.categorymembers[:].title")
     if err != nil {
-		c.Errorf("%v: %v", err.Error(), resp.Body)
+		c.Errorf("%v: %v", err.Error(), string(bodyBytes))
         http.Error(w, "My bad.", http.StatusInternalServerError)
         return
     }
@@ -89,5 +107,19 @@ func refreshGenreListHandler(w http.ResponseWriter, r *http.Request) {
         http.Error(w, "Sorry.", http.StatusInternalServerError)
         return
     }
+	var playlistTitles, subCategoryTitles []string
+	for _, untypedTitle := range childTitles {
+		title, ok := untypedTitle.(string)
+		if !ok {
+			c.Criticalf(`Expected string found %t: %v`, untypedTitle)
+			http.Error(w, "I messed up.", http.StatusInternalServerError)
+			return
+		}
+		if strings.HasPrefix(title, "Category:") {
+			subCategoryTitles = append(subCategoryTitles, title)
+		} else {
+			playlistTitles = append(playlistTitles, title)
+		}
+	}
 	w.Write([]byte(fmt.Sprintf("%#v", childTitles)))
 }
