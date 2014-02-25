@@ -18,7 +18,6 @@ package playlistimporter
 import (
 	"encoding/json"
     "fmt"
-	"io/ioutil"
     "net/http"
 	"net/url"
 	"strings"
@@ -83,21 +82,25 @@ func refreshGenreListHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	bodyBytes, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		c.Errorf("Error reading response body: %v", err.Error())
-	}
 	if !strings.HasPrefix(resp.Status, "2") {
-		c.Errorf("Status: %v\nBody: %v", resp.Status, string(bodyBytes))
+		c.Errorf("Status: %v", resp.Status)
 		http.Error(w, "Uh-oh.", http.StatusInternalServerError)
 		return
 	}
-	c.Debugf("%v", string(bodyBytes))
 	var v interface{}
-	json.Unmarshal(bodyBytes, v)
+	{
+		dec := json.NewDecoder(resp.Body)
+		// Decode takes a pointer.
+		err := dec.Decode(&v)
+		if err != nil {
+			c.Errorf("Error decoding JSON: %v", err.Error())
+			http.Error(w, "Well, shucks.", http.StatusInternalServerError)
+			return
+		}
+	}
 	untypedTitles, err := unwrap.Unwrap(v, ".query.categorymembers[:].title")
     if err != nil {
-		c.Errorf("%v: %v", err.Error(), string(bodyBytes))
+		c.Errorf("%v", err.Error())
         http.Error(w, "My bad.", http.StatusInternalServerError)
         return
     }
@@ -121,5 +124,10 @@ func refreshGenreListHandler(w http.ResponseWriter, r *http.Request) {
 			playlistTitles = append(playlistTitles, title)
 		}
 	}
-	w.Write([]byte(fmt.Sprintf("%#v", childTitles)))
+	c.Infof(
+		"Found %d subcategories and %d playlists.",
+		len(subCategoryTitles),
+		len(playlistTitles),
+	)
+	fmt.Println(w, "Success!")
 }

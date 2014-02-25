@@ -33,12 +33,17 @@ func Unwrap(tree interface{}, q string) (interface{}, error) {
 					),
 				}
 			}
-			m, ok := tree.(map[string]interface{})
-			if !ok {
-				return nil, &UnwrapError{"unwrap: Type error"}
-			}
 			if tree == nil {
 				return nil, &UnwrapError{"unwrap: Nil error"}
+			}
+			m, ok := tree.(map[string]interface{})
+			if !ok {
+				return nil, &UnwrapError{
+					fmt.Sprintf(
+						"unwrap: Type error: expected map[string]interface{}; got %T",
+						tree,
+					),
+				}
 			}
 			tree = m[s.TokenText()]
 		case '[':
