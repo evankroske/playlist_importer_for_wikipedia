@@ -16,23 +16,29 @@ limitations under the License.
 package playlistimporter
 
 import (
-	"fmt"
-	"net/http"
+	"strconv"
 
 	"appengine"
+	"appengine/taskqueue"
 )
 
-func kickoffGenreDiscoveryHandler(w http.ResponseWriter, r *http.Request) {
-	c := appengine.NewContext(r)
-	err := enqueueTaskDiscoverPlaylists(c, "Category:Music_genres", 5)
-	if err != nil {
-		c.Criticalf(err.Error())
-		http.Error(
-			w,
-			"Error adding task to queue",
-			http.StatusInternalServerError,
-		)
-		return
-	}
-	fmt.Fprintln(w, "Task added successfully")
+const (
+	categoryTitleFormKey = "cmtitle"
+	playlistSearchDepthFormKey = "depth"
+)
+
+func enqueueTaskDiscoverPlaylists(
+	c appengine.Context,
+	categoryTitle string,
+	searchDepth int,
+) error {
+	t := taskqueue.NewPOSTTask(
+		discoverPlaylistsPath,
+		map[string][]string{
+			categoryTitleFormKey: []string{categoryTitle},
+			playlistSearchDepthFormKey: []string{strconv.Itoa(searchDepth)},
+		},
+	)
+	_, err := taskqueue.Add(c, t, "playlistSources")
+	return err
 }

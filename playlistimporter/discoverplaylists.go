@@ -28,8 +28,8 @@ import (
 	"playlistimporter/unwrap"
 )
 
-const categoryTitleFormKey = "cmtitle"
 const categoryMembersLimit = "500"
+
 func refreshGenreListHandler(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	r.ParseForm()
