@@ -1,4 +1,4 @@
 cron:
 - description: start playlist discovery
   url: /admin/startplaylistdiscovery
-  schedule: every 1 day
+  schedule: every day 18:00
