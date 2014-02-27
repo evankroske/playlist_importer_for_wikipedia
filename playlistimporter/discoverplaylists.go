@@ -39,27 +39,19 @@ func refreshGenreListHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Whoops.", http.StatusInternalServerError)
 		return
 	}
-	// "s" for "slice"
-	s := func(v string) []string {
-		return []string{v}
-	}
 	reqData := url.Values{
-		"action": s("query"),
-		"list": s("categorymembers"),
-		"format": s("json"),
-		"cmlimit": s(categoryMembersLimit),
+		"action": []string{"query"},
+		"list": []string{"categorymembers"},
+		"format": []string{"json"},
+		"cmlimit": []string{categoryMembersLimit},
 		"cmtitle": parentTitles,
 	}
-	reqUrl := &url.URL{
-		Scheme: "http",
-		Host: "en.wikipedia.org",
-		Path: "/w/api.php",
-		RawQuery: reqData.Encode(),
-	}
-	c.Debugf("Wikipedia request URL: %v", reqUrl)
+	reqURL := makeWikipediaEndpoint()
+	reqURL.RawQuery = reqData.Encode()
+	c.Debugf("Wikipedia request URL: %v", reqURL)
 	req, err := http.NewRequest(
 		"GET",
-		reqUrl.String(),
+		reqURL.String(),
 		nil,
 	)
 	if err != nil {
