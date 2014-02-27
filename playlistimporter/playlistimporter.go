@@ -20,7 +20,10 @@ import (
     "net/http"
 )
 
-const discoverPlaylistsPath = "/admin/discoverplaylists"
+const (
+	discoverPlaylistsPath = "/admin/discoverplaylists"
+	indexPlaylistsPath = "/admin/indexplaylists"
+)
 
 func init() {
     http.HandleFunc("/", handler)
@@ -31,6 +34,7 @@ func init() {
 	)
 	http.HandleFunc("/admin/login", loginHandler)
 	http.HandleFunc("/admin/logout", logoutHandler)
+	http.HandleFunc(indexPlaylistsPath, indexPlaylistsHandler)
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
