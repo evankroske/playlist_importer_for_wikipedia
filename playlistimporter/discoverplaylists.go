@@ -46,13 +46,7 @@ func refreshGenreListHandler(w http.ResponseWriter, r *http.Request) {
 		"cmtitle": parentTitles,
 	}
 	client := urlfetch.Client(c)
-	// If you want to run your own version of this app, change the user agent
-	// to use your app's information.
-	userAgentStr := fmt.Sprintf(
-		"Playlist Importer for Wikipedia/%s (%s; evan@evankroske.com)",
-		appengine.VersionID(c),
-		 "http://playlistimporterforwikipedia.appspot.com",
-	)
+	userAgentStr := makeUserAgentString(appengine.VersionID(c))
 	jsonRsp, err := queryWikipediaAPI(client, userAgentStr, reqData)
 	untypedTitles, err := unwrap.Unwrap(jsonRsp, ".query.categorymembers[:].title")
     if err != nil {
