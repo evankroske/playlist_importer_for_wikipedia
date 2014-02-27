@@ -16,7 +16,6 @@ limitations under the License.
 package playlistimporter
 
 import (
-	"encoding/json"
     "fmt"
     "net/http"
 	"net/url"
@@ -46,51 +45,16 @@ func refreshGenreListHandler(w http.ResponseWriter, r *http.Request) {
 		"cmlimit": []string{categoryMembersLimit},
 		"cmtitle": parentTitles,
 	}
-	reqURL := makeWikipediaEndpoint()
-	reqURL.RawQuery = reqData.Encode()
-	c.Debugf("Wikipedia request URL: %v", reqURL)
-	req, err := http.NewRequest(
-		"GET",
-		reqURL.String(),
-		nil,
-	)
-	if err != nil {
-		c.Criticalf(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+	client := urlfetch.Client(c)
 	// If you want to run your own version of this app, change the user agent
 	// to use your app's information.
-	userAgent := fmt.Sprintf(
+	userAgentStr := fmt.Sprintf(
 		"Playlist Importer for Wikipedia/%s (%s; evan@evankroske.com)",
 		appengine.VersionID(c),
 		 "http://playlistimporterforwikipedia.appspot.com",
 	)
-	req.Header.Add("User-Agent", userAgent)
-	client := urlfetch.Client(c)
-	resp, err := client.Do(req)
-	defer resp.Body.Close()
-	if err != nil {
-		c.Errorf("%v", err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	if !strings.HasPrefix(resp.Status, "2") {
-		c.Errorf("Status: %v", resp.Status)
-		http.Error(w, "Uh-oh.", http.StatusInternalServerError)
-		return
-	}
-	var v interface{}
-	{
-		dec := json.NewDecoder(resp.Body)
-		// Decode takes a pointer.
-		err := dec.Decode(&v)
-		if err != nil {
-			c.Errorf("Error decoding JSON: %v", err.Error())
-			http.Error(w, "Well, shucks.", http.StatusInternalServerError)
-			return
-		}
-	}
-	untypedTitles, err := unwrap.Unwrap(v, ".query.categorymembers[:].title")
+	jsonRsp, err := queryWikipediaAPI(client, userAgentStr, reqData)
+	untypedTitles, err := unwrap.Unwrap(jsonRsp, ".query.categorymembers[:].title")
     if err != nil {
 		c.Errorf("%v", err.Error())
         http.Error(w, "My bad.", http.StatusInternalServerError)
@@ -98,7 +62,7 @@ func refreshGenreListHandler(w http.ResponseWriter, r *http.Request) {
     }
 	childTitles, ok := untypedTitles.([]interface{})
     if !ok {
-		c.Errorf("%v: %v", "Got wrong type from unwrap", resp.Body)
+		c.Errorf("%v", "Got wrong type from unwrap")
         http.Error(w, "Sorry.", http.StatusInternalServerError)
         return
     }
