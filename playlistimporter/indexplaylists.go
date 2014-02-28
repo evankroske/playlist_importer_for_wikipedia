@@ -18,12 +18,70 @@ package playlistimporter
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"appengine"
+	"appengine/urlfetch"
+
+	"playlistimporter/unwrap"
 )
+
+const pllimit = "500"
 
 func indexPlaylistsHandler(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
-	c.Infof("Loaded")
-	fmt.Fprintln(w, "Good!")
+	playlistTitle := "Dubstep"
+	args := url.Values{
+		"action": []string{"query"},
+		"format": []string{"json"},
+		"namespace": []string{"0"},
+		"pllimit": []string{pllimit},
+		"prop": []string{"links"},
+		"titles": []string{playlistTitle},
+	}
+	client := urlfetch.Client(c)
+	userAgentString := makeUserAgentString(appengine.VersionID(c))
+	jsonRsp, err := queryWikipediaAPI(client, userAgentString, args)
+	if err != nil {
+		http.Error(
+			w,
+			"I can't believe this is happening.",
+			http.StatusInternalServerError,
+		)
+		return
+	}
+	pageIDToPageUntyped, err := unwrap.Unwrap(jsonRsp, ".query.pages")
+	if err != nil {
+		http.Error(w, "Badness", http.StatusInternalServerError)
+		return
+	}
+	pageIDToPage, ok := pageIDToPageUntyped.(map[string]interface{})
+	if !ok {
+		http.Error(w, "Curses", http.StatusInternalServerError)
+		return
+	}
+	for _, page := range pageIDToPage {
+		titleUntyped, _ := unwrap.Unwrap(page, ".title")
+		title, _ := titleUntyped.(string)
+		linkedTitlesUntyped, err := unwrap.Unwrap(page, ".links[:].title")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		linkedTitles, ok := linkedTitlesUntyped.([]interface{})
+		if !ok {
+			http.Error(
+				w,
+				"linkedTitles type conversion failed",
+				http.StatusInternalServerError,
+			)
+		}
+		for _, linkedTitleUntyped := range(linkedTitles) {
+			linkedTitle, _ := linkedTitleUntyped.(string)
+			fmt.Fprintln(w, url.Values{
+				"parent": []string{title},
+				"linkedTitles": []string{linkedTitle},
+			})
+		}
+	}
 }
