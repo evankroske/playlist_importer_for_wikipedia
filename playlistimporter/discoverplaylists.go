@@ -19,9 +19,12 @@ import (
     "fmt"
     "net/http"
 	"net/url"
+	"strconv"
 	"strings"
+	"time"
 
 	"appengine"
+	"appengine/taskqueue"
 	"appengine/urlfetch"
 
 	"playlistimporter/unwrap"
@@ -79,5 +82,12 @@ func refreshGenreListHandler(w http.ResponseWriter, r *http.Request) {
 		len(subCategoryTitles),
 		len(playlistTitles),
 	)
+	for _, playlistTitle := range playlistTitles {
+		t := taskqueue.NewPOSTTask(indexPlaylistsPath, url.Values{
+			"titles": []string{playlistTitle},
+			"accesstime": []string{strconv.FormatInt(time.Now().Unix(), 10)},
+		})
+		taskqueue.Add(c, t, "playlists")
+	}
 	fmt.Println(w, "Success!")
 }

@@ -29,16 +29,17 @@ import (
 const pllimit = "500"
 
 func indexPlaylistsHandler(w http.ResponseWriter, r *http.Request) {
-	c := appengine.NewContext(r)
-	playlistTitle := "Dubstep"
+	r.ParseForm()
+	playlistTitles := r.Form["titles"]
 	args := url.Values{
 		"action": []string{"query"},
 		"format": []string{"json"},
 		"namespace": []string{"0"},
 		"pllimit": []string{pllimit},
 		"prop": []string{"links"},
-		"titles": []string{playlistTitle},
+		"titles": playlistTitles,
 	}
+	c := appengine.NewContext(r)
 	client := urlfetch.Client(c)
 	userAgentString := makeUserAgentString(appengine.VersionID(c))
 	jsonRsp, err := queryWikipediaAPI(client, userAgentString, args)
@@ -83,5 +84,6 @@ func indexPlaylistsHandler(w http.ResponseWriter, r *http.Request) {
 				"linkedTitles": []string{linkedTitle},
 			})
 		}
+		c.Infof("%v links found on page \"%v\"", len(linkedTitles), title)
 	}
 }
