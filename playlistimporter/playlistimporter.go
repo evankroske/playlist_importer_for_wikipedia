@@ -34,7 +34,10 @@ func init() {
 	)
 	http.HandleFunc("/admin/login", loginHandler)
 	http.HandleFunc("/admin/logout", logoutHandler)
-	http.HandleFunc(indexPlaylistsPath, indexPlaylistsHandler)
+	http.HandleFunc(
+		indexPlaylistsPath,
+		muxByMethod(handler, indexPlaylistsHandler),
+	)
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -42,5 +45,19 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, r.URL.Path)
 	} else {
 		http.NotFound(w, r)
+	}
+}
+
+func muxByMethod(
+	getHandler http.HandlerFunc,
+	postHandler http.HandlerFunc,
+) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case "GET":
+			getHandler(w, r)
+		case "POST":
+			postHandler(w, r)
+		}
 	}
 }
