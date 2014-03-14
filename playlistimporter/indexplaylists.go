@@ -34,7 +34,7 @@ func indexPlaylistsHandler(w http.ResponseWriter, r *http.Request) {
 	args := url.Values{
 		"action": []string{"query"},
 		"format": []string{"json"},
-		"namespace": []string{"0"},
+		"plnamespace": []string{"0"},
 		"pllimit": []string{pllimit},
 		"prop": []string{"links"},
 		"titles": playlistTitles,
@@ -53,6 +53,7 @@ func indexPlaylistsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	pageIDToPageUntyped, err := unwrap.Unwrap(jsonRsp, ".query.pages")
 	if err != nil {
+		c.Errorf("%v", jsonRsp)
 		http.Error(w, "Badness", http.StatusInternalServerError)
 		return
 	}

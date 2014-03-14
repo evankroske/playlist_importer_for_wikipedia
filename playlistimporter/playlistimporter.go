@@ -36,7 +36,7 @@ func init() {
 	http.HandleFunc("/admin/logout", logoutHandler)
 	http.HandleFunc(
 		indexPlaylistsPath,
-		muxByMethod(handler, indexPlaylistsHandler),
+		muxByMethod(serveIndexPlaylistsForm, indexPlaylistsHandler),
 	)
 }
 
@@ -58,6 +58,8 @@ func muxByMethod(
 			getHandler(w, r)
 		case "POST":
 			postHandler(w, r)
+		default:
+			http.Error(w, "Badness", http.StatusInternalServerError)
 		}
 	}
 }

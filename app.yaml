@@ -10,5 +10,8 @@ handlers:
 - url: /admin/discoverplaylists
   script: _go_app
   login: admin
+- url: /templates
+  static_dir: playlistimporter/templates
+  application_readable: true
 - url: /.*
   script: _go_app
