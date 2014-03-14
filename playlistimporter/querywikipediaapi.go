@@ -29,6 +29,7 @@ func queryWikipediaAPI(
 	userAgent string,
 	reqData url.Values,
 ) (jsonRsp interface{}, err error) {
+	reqData["format"] = []string{"json"}
 	reqURL := makeWikipediaEndpoint()
 	reqURL.RawQuery = reqData.Encode()
 	req, err := http.NewRequest(

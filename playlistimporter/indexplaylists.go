@@ -30,16 +30,15 @@ const pllimit = "500"
 
 func indexPlaylistsHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
+	c := appengine.NewContext(r)
 	playlistTitles := r.Form["titles"]
 	args := url.Values{
 		"action": []string{"query"},
-		"format": []string{"json"},
 		"plnamespace": []string{"0"},
 		"pllimit": []string{pllimit},
 		"prop": []string{"links"},
 		"titles": playlistTitles,
 	}
-	c := appengine.NewContext(r)
 	client := urlfetch.Client(c)
 	userAgentString := makeUserAgentString(appengine.VersionID(c))
 	jsonRsp, err := queryWikipediaAPI(client, userAgentString, args)
