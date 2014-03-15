@@ -29,7 +29,7 @@ import (
 const pllimit = "500"
 
 func indexPlaylistsHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Content-Type", "text/html; charset=utf-8")
+	w.Header().Add("Content-Type", "text/plain; charset=utf-8")
 	r.ParseForm()
 	c := appengine.NewContext(r)
 	playlistTitles := r.Form["titles"]
@@ -53,8 +53,12 @@ func indexPlaylistsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	pageIDToPageUntyped, err := unwrap.Unwrap(jsonRsp, ".query.pages")
 	if err != nil {
-		c.Errorf("%v", jsonRsp)
-		http.Error(w, "Badness", http.StatusInternalServerError)
+		c.Errorf("Error unwrapping %v", jsonRsp)
+		http.Error(
+			w,
+			fmt.Sprintf("Error unwrapping %v", jsonRsp),
+			http.StatusInternalServerError
+		)
 		return
 	}
 	pageIDToPage, ok := pageIDToPageUntyped.(map[string]interface{})
