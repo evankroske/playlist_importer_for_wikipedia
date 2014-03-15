@@ -16,10 +16,15 @@ limitations under the License.
 package playlistimporter
 
 import (
+	"fmt"
 	"net/http"
+
+	"appengine"
 )
 
-const indexPlaylistsTemplateFile = "playlistimporter/templates/indexplaylists.html"
-
-var serveIndexPlaylistsForm http.HandlerFunc =
-	makeServeFormHandlerFunc(indexPlaylistsTemplateFile)
+func putPlaylist(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+	c.Infof("Blah")
+	w.Header().Add("Content-Type", "text/plain; charset=utf-8")
+	fmt.Fprintln(w, "Blah")
+}

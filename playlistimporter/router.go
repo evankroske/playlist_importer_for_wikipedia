@@ -23,6 +23,7 @@ import (
 const (
 	discoverPlaylistsPath = "/admin/discoverplaylists"
 	indexPlaylistsPath = "/admin/indexplaylists"
+	putPlaylistPath = "/admin/putplaylist"
 )
 
 func init() {
@@ -37,6 +38,10 @@ func init() {
 	http.HandleFunc(
 		indexPlaylistsPath,
 		muxByMethod(serveIndexPlaylistsForm, indexPlaylistsHandler),
+	)
+	http.HandleFunc(
+		putPlaylistPath,
+		muxByMethod(servePutPlaylistDebugForm, putPlaylist),
 	)
 }
 

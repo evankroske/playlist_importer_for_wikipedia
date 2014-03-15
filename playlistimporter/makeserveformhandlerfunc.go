@@ -16,10 +16,24 @@ limitations under the License.
 package playlistimporter
 
 import (
+	"fmt"
+	"io"
 	"net/http"
+	"os"
+
+	"appengine"
 )
 
-const indexPlaylistsTemplateFile = "playlistimporter/templates/indexplaylists.html"
-
-var serveIndexPlaylistsForm http.HandlerFunc =
-	makeServeFormHandlerFunc(indexPlaylistsTemplateFile)
+func makeServeFormHandlerFunc(templateFileName string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		c := appengine.NewContext(r)
+		f, err :=  os.Open(templateFileName)
+		if err != nil {
+			msg := fmt.Sprintf("Failed to open template %s", templateFileName)
+			c.Errorf(msg)
+			http.Error(w, msg, http.StatusInternalServerError)
+			return
+		}
+		io.Copy(w, f)
+	}
+}

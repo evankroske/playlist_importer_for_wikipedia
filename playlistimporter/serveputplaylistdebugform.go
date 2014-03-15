@@ -15,11 +15,9 @@ limitations under the License.
 */
 package playlistimporter
 
-import (
-	"net/http"
-)
+import "net/http"
 
-const indexPlaylistsTemplateFile = "playlistimporter/templates/indexplaylists.html"
+const putPlaylistDebugForm = "playlistimporter/templates/putplaylistdebugform.html"
 
-var serveIndexPlaylistsForm http.HandlerFunc =
-	makeServeFormHandlerFunc(indexPlaylistsTemplateFile)
+var servePutPlaylistDebugForm http.HandlerFunc =
+	makeServeFormHandlerFunc(putPlaylistDebugForm)
