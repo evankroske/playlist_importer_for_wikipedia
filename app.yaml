@@ -6,10 +6,8 @@ api_version: go1
 handlers:
 - url: /admin/startplaylistdiscovery
   script: _go_app
-  login: admin
 - url: /admin/discoverplaylists
   script: _go_app
-  login: admin
 - url: /templates
   static_dir: playlistimporter/templates
   application_readable: true
