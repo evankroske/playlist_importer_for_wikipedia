@@ -57,7 +57,7 @@ func indexPlaylistsHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(
 			w,
 			fmt.Sprintf("Error unwrapping %v", jsonRsp),
-			http.StatusInternalServerError
+			http.StatusInternalServerError,
 		)
 		return
 	}
