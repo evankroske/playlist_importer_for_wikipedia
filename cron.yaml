@@ -1,4 +1,4 @@
 cron:
-- description: start playlist discovery
-  url: /admin/startplaylistdiscovery
-  schedule: every day 18:00
+#- description: start playlist discovery
+#  url: /admin/startplaylistdiscovery
+#  schedule: every day 18:00
