@@ -29,6 +29,7 @@ import (
 const pllimit = "500"
 
 func indexPlaylistsHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("Content-Type", "text/html; charset=utf-8")
 	r.ParseForm()
 	c := appengine.NewContext(r)
 	playlistTitles := r.Form["titles"]
