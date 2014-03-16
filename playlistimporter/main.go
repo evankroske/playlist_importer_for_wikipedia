@@ -24,6 +24,7 @@ const (
 	discoverPlaylistsPath = "/admin/discoverplaylists"
 	indexPlaylistsPath = "/admin/indexplaylists"
 	putPlaylistPath = "/admin/putplaylist"
+	requestRdioAuthorizationPath = "/admin/requestrdioauthorization"
 )
 
 func init() {
@@ -42,6 +43,10 @@ func init() {
 	http.HandleFunc(
 		putPlaylistPath,
 		muxByMethod(servePutPlaylistDebugForm, putPlaylist),
+	)
+	http.HandleFunc(
+		requestRdioAuthorizationPath,
+		requestRdioAuthorization,
 	)
 }
 
