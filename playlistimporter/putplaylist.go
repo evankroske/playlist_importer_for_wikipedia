@@ -23,8 +23,14 @@ import (
 )
 
 func putPlaylist(w http.ResponseWriter, r *http.Request) {
-	c := appengine.NewContext(r)
-	c.Infof("Blah")
 	w.Header().Add("Content-Type", "text/plain; charset=utf-8")
-	fmt.Fprintln(w, "Blah")
+	c := appengine.NewContext(r)
+	err := r.ParseForm()
+	if err != nil {
+		msg := "Error parsing form"
+		c.Errorf(msg)
+		fmt.Println(msg)
+		return
+	}
+	fmt.Fprintln(w, r.PostForm)
 }
